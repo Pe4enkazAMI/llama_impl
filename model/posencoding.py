@@ -14,10 +14,9 @@ class PositionalEncoding(nn.Module):
             max_len - Maximum length of a sequence to expect.
         """
         super().__init__()
-        # TODO
         pe =  torch.zeros(size=(1, max_len, embed_dim))
         pos = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div = torch.exp(torch.arange(0, embed_dim, 2) * (-torch.log(10000)/embed_dim))
+        div = torch.exp(torch.arange(0, embed_dim, 2) * (-torch.log(torch.tensor(10000))/embed_dim))
         pe[..., 0::2] = torch.sin(pos * div)
         pe[..., 1::2] = torch.cos(pos * div)
         pe.unsqueeze(0)

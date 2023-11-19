@@ -13,17 +13,14 @@ class DecoderBlock(nn.Module):
     def __init__(self,
                  emb_dim,
                  num_heads, 
-                 exp_factor) -> None:
+                 exp_factor,
+                 dropout) -> None:
         
         super().__init__()
         
         self.block = nn.Sequential(
             ResidualConnection(
-                MultiHeadAttention(emb_dim, emb_dim, num_heads)
-            ),
-            RMSNorm(emb_dim),
-            ResidualConnection(
-                MultiHeadAttention(emb_dim, emb_dim, num_heads)
+                MultiHeadAttention(emb_dim, emb_dim, num_heads, dropout=dropout)
             ),
             RMSNorm(emb_dim),
             ResidualConnection(
@@ -37,11 +34,12 @@ class DecoderBlock(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, emb_dim, num_head, exp_factor, num_layers, *args, **kwargs):
+    def __init__(self, emb_dim, num_head, exp_factor, num_layers, dropout, *args, **kwargs):
         super().__init__()
         self.emb_dim = emb_dim
         self.num_head = num_head
         self.exp_factor = exp_factor,
+        self.embedding = nn.Embedding(32000, self.emb_dim)
 
         self.num_layers = num_layers
         if kwargs["use_rope"]:
@@ -51,9 +49,12 @@ class Decoder(nn.Module):
             self.pe = PositionalEncoding(emb_dim)
 
         zalupa_slonika = [
-            DecoderBlock(emb_dim, num_head, exp_factor) for _ in range(num_layers)
+            DecoderBlock(emb_dim, num_head, exp_factor, dropout=dropout) for _ in range(num_layers)
         ]
         self.decoder = nn.Sequential(*zalupa_slonika)
 
+        self.linear = nn.Linear(self.emb_dim, 32000)
+
     def forward(self, x):
-        return self.decoder(x)
+        x = self.embedding(x)
+        return self.linear(self.decoder(x))

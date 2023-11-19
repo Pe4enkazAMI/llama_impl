@@ -1,7 +1,11 @@
 import sentencepiece as sps
 
 class Tokenizer:
-    def __init__(self, path_to_corpora, vocab_size, model_prefix, model_type) -> None:
+    def __init__(self, 
+                 path_to_corpora=None,
+                 vocab_size=None,
+                 model_prefix=None, 
+                 model_type=None) -> None:
         self.path_to_corpora = path_to_corpora
         self.vocab_size = vocab_size
         self.model_prefix = model_prefix
@@ -22,3 +26,4 @@ class Tokenizer:
     
     def decode(self, ids):
         return self.tokenizer.DecodeIds(ids)
+

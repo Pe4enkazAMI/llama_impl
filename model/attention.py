@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, input_dim, emb_dim, num_head):
+    def __init__(self, input_dim, emb_dim, num_head, dropout):
         super().__init__()
         assert emb_dim % num_head == 0, "embedding dimension should be divisible by num_head"
         self.input_dim = input_dim
@@ -16,7 +16,7 @@ class MultiHeadAttention(nn.Module):
         self.qkv = nn.Linear(self.input_dim, 3*self.emb_dim)
         self.out = nn.Linear(self.emb_dim, self.emb_dim)
         self._reset_parameters()
-
+        self.dropout = nn.Dropout(p=dropout)
     
     def _reset_parameters(self):
         nn.init.xavier_uniform_(self.qkv.weight)
@@ -24,9 +24,14 @@ class MultiHeadAttention(nn.Module):
         nn.init.xavier_uniform_(self.out.weight)
         self.out.bias.data.fill_(0)
 
-        
+    def make_attn_mask(self, x, device):
+        mask = (torch.triu(torch.ones((x.shape[1], x.shape[1]), device=device)) == 1).transpose(0, 1)
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+        return mask
+
     def forward(self, x, mask=None, return_attention=False):
         bs, seq_len, _  = x.shape
+        mask = self.make_attn_mask(x, x.device)
         qkv = self.qkv(x)
         qkv = qkv.reshape(bs, seq_len, self.num_head, 3 * self.head_dim)
         qkv = qkv.permute(0, 2, 1, 3)
@@ -41,8 +46,7 @@ class MultiHeadAttention(nn.Module):
         value = value.permute(0, 2, 1, 3)
         value = value.reshape(bs, seq_len, self.emb_dim)
 
-        out = self.out(value)
-
+        out = self.dropout(self.out(value))
         if return_attention:
             return out, score
         else:

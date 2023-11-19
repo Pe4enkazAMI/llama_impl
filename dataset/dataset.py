@@ -2,27 +2,20 @@ from torch.utils.data.dataset import Dataset
 from tokenizer.tokenizer import Tokenizer
 import torch 
 from torch.nn.utils.rnn import pad_sequence
+import os
+import numpy as np
 
 class LLaMaDataset(Dataset):
-    def __init__(self, txt_file, root_dir, vocab_size) -> None:
-        super().__init__()
-        self.txt_file = txt_file
+    def __init__(self, root_dir) -> None:
+        super().__init__() 
         self.root_dir = root_dir
-        self.vocab = Tokenizer(path_to_corpora=root_dir + txt_file,
-                               vocab_size=vocab_size, 
-                               model_prefix="llama", 
-                               model_type="bpe")
-        self.vocab.fit()
-
-        with open(root_dir + txt_file, "r") as f:
-            self.corpora = f.readlines()
+        self.npy_files = os.listdir(self.root_dir)
         
-
     def __len__(self):
-        return len(self.corpora)
+        return len(self.npy_files)
 
     def __getitem__(self, index):
-        return torch.tensor(self.vocab.encode(self.corpora[index]))
+        return torch.from_numpy(np.load(self.root_dir + "/" + self.npy_files[index]))
     
 
 def collate_fn(dataset_items):
