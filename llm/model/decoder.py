@@ -19,7 +19,7 @@ class DecoderBlock(nn.Module):
         super().__init__()
         
         self.block = nn.ModuleList([
-            RMSNorm(emb_dim),
+            nn.LayerNorm(emb_dim),
             MultiHeadAttention(emb_dim, emb_dim, num_heads, dropout=dropout),
             FeedForwardLayer(emb_dim, exp_factor)
         ])
