@@ -5,7 +5,7 @@
       "type": "Decoder",
       "args": {
         "emb_dim": 512,
-        "num_head": 4,
+        "num_head": 8,
         "num_layers": 8,
         "dropout": 0.1,
         "exp_factor": 4,
@@ -14,7 +14,7 @@
     },
     "data": {
       "train": {
-        "batch_size": 32,
+        "batch_size": 512,
         "num_workers": 5,
         "datasets": [
           {
@@ -27,7 +27,7 @@
         ]
       },
       "test": {
-        "batch_size": 32,
+        "batch_size": 512,
         "num_workers": 5,
         "datasets": [
           {
@@ -75,6 +75,7 @@
       "wandb_project": "lm_project",
       "wandb_run_name": "LLaMa_First_Run",
       "len_epoch": 1000,
-      "grad_norm_clip": 100
+      "grad_norm_clip": 100,
+      "grad_accum_iters": 4
     }
   }
