@@ -15,5 +15,6 @@ class LLaMaLoss(nn.CrossEntropyLoss):
         ignore_index = pad_id
         super().__init__(weight, size_average, ignore_index, reduce, reduction, label_smoothing)
     def forward(self, logits: Tensor, sentence: Tensor) -> Tensor:
-        return super().forward(logits[..., :-1].transpose(1, 2),
-                               sentence[..., :].long())
+        tgt_out = sentence[:, 1:]    
+        return super().forward(logits.reshape(-1, logits.shape[-1]),
+                               tgt_out.long().reshape(-1))

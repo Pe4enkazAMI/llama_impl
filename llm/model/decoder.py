@@ -59,11 +59,12 @@ class Decoder(nn.Module):
         self.linear = nn.Linear(self.emb_dim, 5001)
 
     def forward(self, sentence):
-        padding_mask = (sentence == 0).to(sentence.device)
+        input = sentence[:, :-1].to(sentence.device)
+        padding_mask = (input == 0).to(sentence.device)
         sentence = self.embedding(sentence)
         for layer in self.decoder:
-            sentence = layer(sentence, padding_mask)
-        return {"logits": self.linear(sentence)}
+            input = layer(input, padding_mask)
+        return {"logits": self.linear(input)}
     
     def __str__(self):
         """

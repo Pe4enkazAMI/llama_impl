@@ -48,7 +48,6 @@ class MultiHeadAttention(nn.Module):
             score = score + mask.unsqueeze(0).unsqueeze(0) + padding_mask.unsqueeze(1).unsqueeze(-1)
         
         score = F.softmax(score, dim=-1)
-
         value = score @ v
         value = value.permute(0, 2, 1, 3)
         value = value.reshape(bs, seq_len, self.emb_dim)
