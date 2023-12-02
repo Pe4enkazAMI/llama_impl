@@ -25,8 +25,8 @@ class MultiHeadAttention(nn.Module):
         self.out.bias.data.fill_(0)
 
     @torch.no_grad()
-    def make_attn_mask(self, x, sz):
-        mask = (torch.triu(torch.ones((sz, sz), device=x.device)) == 1).transpose(0, 1)
+    def make_attn_mask(self, x, device):
+        mask = (torch.triu(torch.ones((x.shape[1], x.shape[1]), device=device)) == 1).transpose(0, 1)
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
 
