@@ -73,7 +73,7 @@
       "early_stop": 100,
       "visualize": "wandb",
       "wandb_project": "lm_project",
-      "wandb_run_name": "one_batch_test",
+      "wandb_run_name": "LLaMa_First_Run",
       "len_epoch": 1000,
       "grad_norm_clip": 100
     }
