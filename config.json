@@ -5,10 +5,10 @@
       "type": "Decoder",
       "args": {
         "emb_dim": 512,
-        "num_head": 8,
+        "num_head": 4,
         "num_layers": 8,
         "dropout": 0.1,
-        "exp_factor": 2,
+        "exp_factor": 4,
         "use_rope": false
       }
     },
