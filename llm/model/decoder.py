@@ -19,14 +19,13 @@ class DecoderBlock(nn.Module):
         super().__init__()
         
         self.block = nn.Sequential(
+            RMSNorm(emb_dim),
             ResidualConnection(
                 MultiHeadAttention(emb_dim, emb_dim, num_heads, dropout=dropout)
             ),
-            RMSNorm(emb_dim),
             ResidualConnection(
                 FeedForwardLayer(emb_dim, exp_factor)
-            ),
-            RMSNorm(emb_dim)
+            )
         )
     def forward(self, x):
         return self.block(x)

@@ -24,8 +24,10 @@ class MultiHeadAttention(nn.Module):
         nn.init.xavier_uniform_(self.out.weight)
         self.out.bias.data.fill_(0)
 
-    def make_attn_mask(self, x, device):
-        mask = (torch.triu(torch.ones((x.shape[1], x.shape[1]), device=device)) == 1).transpose(0, 1)
+    @torch.no_grad()
+    def make_attn_mask(self, x, sz):
+        mask = (torch.triu(torch.ones((sz, sz), device=x.device)) == 1).transpose(0, 1)
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
 
     def forward(self, x, mask=None, return_attention=False, use_flash=False):
@@ -45,13 +47,13 @@ class MultiHeadAttention(nn.Module):
             score = q @ k.transpose(-1, -2)
             score = score / (q.shape[-1]**(0.5))
             if mask is not None:
-                score = score.masked_fill(mask, -9e-13)
+                score = score + mask
             score = F.softmax(score, dim=-1)
             value = score @ v
-            
+
         value = value.permute(0, 2, 1, 3)
         value = value.reshape(bs, seq_len, self.emb_dim)
 
-        out = self.dropout(self.out(value)) + x
+        out = self.dropout(self.out(value))
         return out
 
