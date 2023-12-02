@@ -39,7 +39,7 @@ class Decoder(nn.Module):
         self.emb_dim = emb_dim
         self.num_head = num_head
         self.exp_factor = exp_factor,
-        self.embedding = nn.Embedding(5000, self.emb_dim)
+        self.embedding = nn.Embedding(5001, self.emb_dim)
 
         self.num_layers = num_layers
         if kwargs["use_rope"]:
