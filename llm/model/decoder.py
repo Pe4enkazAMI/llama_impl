@@ -26,8 +26,10 @@ class DecoderBlock(nn.Module):
     def forward(self, x, padding_mask):
         for i, layer in enumerate(self.block):
             if i == 1:
-                x = layer(x, padding_mask)
-            else:
+                x = layer(x, padding_mask) + x
+            elif i != 0:
+                x = layer(x) + x
+            else: 
                 x = layer(x)
         return x
     
