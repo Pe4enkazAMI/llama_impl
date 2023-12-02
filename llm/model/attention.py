@@ -44,7 +44,7 @@ class MultiHeadAttention(nn.Module):
         score = score / (q.shape[-1]**(0.5))
 
         if mask is not None:
-            padding_mask = padding_mask.float().masked_fill(padding_mask == 1, -9e-13).masked_fill(padding_mask == 0, 0.0)
+            padding_mask = padding_mask.float().masked_fill(padding_mask == 1, -9e13).masked_fill(padding_mask == 0, 0.0)
             score = score + mask.unsqueeze(0).unsqueeze(0) + padding_mask.unsqueeze(1).unsqueeze(-1)
         
         score = F.softmax(score, dim=-1)
