@@ -4,6 +4,11 @@ from torch.utils.data import ConcatDataset, DataLoader
 
 import llm.datasets_
 from llm.utils.parse_config import ConfigParser
+import torch
+def collate_fn(dataset_items):
+    inp = [items["sentence"] for items in dataset_items]
+    items = torch.stack(inp, dim=0)
+    return {"sentence" : items}
 
 
 def get_dataloaders(configs: ConfigParser):
@@ -43,7 +48,7 @@ def get_dataloaders(configs: ConfigParser):
 
         # create dataloader
         dataloader = DataLoader(
-            dataset, batch_size=bs,
+            dataset, batch_size=bs, collate_fn=collate_fn,
             shuffle=shuffle, num_workers=num_workers,
             batch_sampler=batch_sampler, drop_last=drop_last
         )

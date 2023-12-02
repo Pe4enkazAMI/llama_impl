@@ -105,7 +105,7 @@ class Trainer(BaseTrainer):
         """
         Move all necessary tensors to the HPU
         """
-        for tensor_for_gpu in ["input_ids", "padding_mask"]:
+        for tensor_for_gpu in ["sentence"]:
             batch[tensor_for_gpu] = batch[tensor_for_gpu].to(device)
         return batch
 

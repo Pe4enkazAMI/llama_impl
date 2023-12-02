@@ -55,6 +55,6 @@ class Decoder(nn.Module):
 
         self.linear = nn.Linear(self.emb_dim, 5000)
 
-    def forward(self, x):
-        x = self.embedding(x)
-        return self.linear(self.decoder(x))
+    def forward(self, sentence):
+        sentence = self.embedding(sentence)
+        return {"logits": self.linear(self.decoder(sentence))}
