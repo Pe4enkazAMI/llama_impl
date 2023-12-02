@@ -25,12 +25,35 @@
             }
           }
         ]
+      },
+      "test": {
+        "batch_size": 1024,
+        "num_workers": 5,
+        "datasets": [
+          {
+            "type": "LLaMaDataset",
+            "args": {
+              "data_dir": "/kaggle/input/llamad/val_dataset.pt",
+              "tokenizer_model_path": "/Users/bayesian_monster/llama/llm/tiny_stories_5k.model"
+            }
+          }
+        ]
       }
     },
     "optimizer": {
       "type": "AdamW",
       "args": {
         "lr": 1e-3
+      }
+    },
+    "lr_scheduler": {
+      "type": "OneCycleLR",
+      "args": {
+        "steps_per_epoch": 1000,
+        "epochs": 100,
+        "anneal_strategy": "cos",
+        "max_lr": 1e-3,
+        "pct_start": 0.2
       }
     },
     "loss": {
@@ -42,7 +65,7 @@
     "metrics": [
     ],
     "trainer": {
-      "epochs": 1000,
+      "epochs": 100,
       "save_dir": "saved/",
       "save_period": 5,
       "verbosity": 2,

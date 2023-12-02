@@ -103,7 +103,7 @@ class Trainer(BaseTrainer):
     @staticmethod
     def move_batch_to_device(batch, device: torch.device):
         """
-        Move all necessary tensors to the HPU
+        Move all necessary tensors to the GPU
         """
         for tensor_for_gpu in ["sentence"]:
             batch[tensor_for_gpu] = batch[tensor_for_gpu].to(device)
@@ -128,6 +128,7 @@ class Trainer(BaseTrainer):
         for batch_idx, batch in enumerate(
                 tqdm(self.train_dataloader, desc="train", total=self.len_epoch)
         ):
+            stop = False
             try:
                 batch = self.process_batch(
                     batch,
@@ -163,6 +164,9 @@ class Trainer(BaseTrainer):
                 last_train_metrics = self.train_metrics.result()
                 self.train_metrics.reset()
             if batch_idx >= self.len_epoch:
+                stop = True
+                break
+            if stop:
                 break
         log = last_train_metrics
         
