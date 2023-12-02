@@ -7,7 +7,8 @@
         "emb_dim": 512,
         "num_head": 8,
         "num_layers": 8,
-        "dropout": 0.1
+        "dropout": 0.1,
+        "exp_factor": 2
       }
     },
     "data": {
