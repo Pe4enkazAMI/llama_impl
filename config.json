@@ -20,7 +20,7 @@
           {
             "type": "LLaMaDataset",
             "args": {
-              "data_dir": "/kaggle/input/llamad/train_dataset.pt",
+              "data_dir": "/home/jupyter/work/resources/for_dl/train_dataset.pt",
               "tokenizer_model_path": "/Users/bayesian_monster/llama/llm/tiny_stories_5k.model"
             }
           }
@@ -33,7 +33,7 @@
           {
             "type": "LLaMaDataset",
             "args": {
-              "data_dir": "/kaggle/input/llamad/val_dataset.pt",
+              "data_dir": "/home/jupyter/work/resources/for_dl/val_dataset.pt",
               "tokenizer_model_path": "/Users/bayesian_monster/llama/llm/tiny_stories_5k.model"
             }
           }
