@@ -1,0 +1,55 @@
+{
+    "name": "default_config",
+    "n_gpu": 0,
+    "arch": {
+      "type": "Decoder",
+      "args": {
+        "emb_dim": 512,
+        "num_head": 8,
+        "num_layers": 8,
+        "dropout": 0.1
+      }
+    },
+    "data": {
+      "train": {
+        "batch_size": 1024,
+        "num_workers": 5,
+        "datasets": [
+          {
+            "type": "LLaMaDataset",
+            "args": {
+              "data_dir": "/kaggle/input/llamad/train_dataset.pt",
+              "tokenizer_model_path": "/Users/bayesian_monster/llama/llm/tiny_stories_5k.model"
+            }
+          }
+        ]
+      }
+    },
+    "optimizer": {
+      "type": "AdamW",
+      "args": {
+        "lr": 1e-3
+      }
+    },
+    "loss": {
+      "type": "LLaMaLoss",
+      "args": {
+        "pad_id": 0
+      }
+    },
+    "metrics": [
+    ],
+    "trainer": {
+      "epochs": 1000,
+      "save_dir": "saved/",
+      "save_period": 5,
+      "verbosity": 2,
+      "monitor": "min val_loss",
+      "early_stop": 100,
+      "visualize": "wandb",
+      "wandb_project": "lm_project",
+      "wandb_run_name": "one_batch_test",
+      "len_epoch": 1000,
+      "grad_norm_clip": 100
+    }
+  }
