@@ -12,7 +12,7 @@ class WanDBWriter:
 
         try:
             import wandb
-            wandb.login(relogin=True, key=config["wandb_key"])
+            wandb.login()
 
             if config['trainer'].get('wandb_project') is None:
                 raise ValueError("please specify project name for wandb")
