@@ -8,7 +8,6 @@ from torch.nn.utils.rnn import pad_sequence
 from llm.tokenizer import Tokenizer
 
 
-
 class LLaMaDataset:
     def __init__(self, data_dir, *args, **kwargs) -> None:
         self.path = data_dir
