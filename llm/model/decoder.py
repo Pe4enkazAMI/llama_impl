@@ -14,21 +14,22 @@ class DecoderBlock(nn.Module):
                  emb_dim,
                  num_heads, 
                  exp_factor,
-                 dropout) -> None:
+                 dropout,
+                 padding_mask) -> None:
         
         super().__init__()
         
-        self.block = nn.Sequential(
+        self.block = nn.ModuleList([
             RMSNorm(emb_dim),
-            ResidualConnection(
-                MultiHeadAttention(emb_dim, emb_dim, num_heads, dropout=dropout)
-            ),
-            ResidualConnection(
-                FeedForwardLayer(emb_dim, exp_factor)
-            )
-        )
-    def forward(self, x):
-        return self.block(x)
+            MultiHeadAttention(emb_dim, emb_dim, num_heads, dropout=dropout),
+            FeedForwardLayer(emb_dim, exp_factor)
+        ])
+    def forward(self, x, padding_mask):
+        for i, layer in enumerate(self.block):
+            if i == 1:
+                x = layer(x, padding_mask)
+            else:
+                x = layer(x)
     
 
 
@@ -58,10 +59,7 @@ class Decoder(nn.Module):
         padding_mask = (sentence == 0)
         sentence = self.embedding(sentence)
         for layer in self.decoder:
-            if layer.__name__ == "MultiHeadAttention":
-                sentence = layer(sentence, padding_mask)
-            else:
-                sentence = layer(sentence)
+            sentence = layer(sentence, padding_mask)
         return {"logits": self.linear(self.decoder(sentence))}
     
     def __str__(self):
