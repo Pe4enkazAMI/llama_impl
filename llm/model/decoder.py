@@ -50,12 +50,18 @@ class Decoder(nn.Module):
         zalupa_slonika = [
             DecoderBlock(emb_dim, num_head, exp_factor, dropout=dropout) for _ in range(num_layers)
         ]
-        self.decoder = nn.Sequential(*zalupa_slonika)
+        self.decoder = nn.ModuleList(zalupa_slonika)
 
         self.linear = nn.Linear(self.emb_dim, 5001)
 
     def forward(self, sentence):
+        padding_mask = (sentence == 0)
         sentence = self.embedding(sentence)
+        for layer in self.decoder:
+            if layer.__name__ == "MultiHeadAttention":
+                sentence = layer(sentence, padding_mask)
+            else:
+                sentence = layer(sentence)
         return {"logits": self.linear(self.decoder(sentence))}
     
     def __str__(self):

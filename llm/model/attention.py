@@ -27,10 +27,10 @@ class MultiHeadAttention(nn.Module):
     @torch.no_grad()
     def make_attn_mask(self, x, device):
         mask = (torch.triu(torch.ones((x.shape[1], x.shape[1]), device=device)) == 1).transpose(0, 1)
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+        mask = mask.float().masked_fill(mask == 1, float('-inf')).masked_fill(mask == 0, float(0.0))
         return mask
 
-    def forward(self, x, mask=None, return_attention=False, use_flash=False):
+    def forward(self, x, padding_mask=None, return_attention=False, use_flash=False):
         bs, seq_len, _  = x.shape
         mask = self.make_attn_mask(x, x.device)
         qkv = self.qkv(x)
@@ -47,7 +47,8 @@ class MultiHeadAttention(nn.Module):
             score = q @ k.transpose(-1, -2)
             score = score / (q.shape[-1]**(0.5))
             if mask is not None:
-                score = score + mask
+                padding_mask = padding_mask.float().masked_fill(padding_mask == 1, float('-inf')).masked_fill(padding_mask == 0, float(0.0))
+                score = score + mask + padding_mask
             score = F.softmax(score, dim=-1)
             value = score @ v
 
