@@ -7,7 +7,7 @@ from .normlayer import RMSNorm
 from .posencoding import PositionalEncoding, RoPE
 from .attention import MultiHeadAttention
 from .feedforward import FeedForwardLayer
-
+import numpy as np
 
 class DecoderBlock(nn.Module):
     def __init__(self,
@@ -58,3 +58,11 @@ class Decoder(nn.Module):
     def forward(self, sentence):
         sentence = self.embedding(sentence)
         return {"logits": self.linear(self.decoder(sentence))}
+    
+    def __str__(self):
+        """
+        Model prints with number of trainable parameters
+        """
+        model_parameters = filter(lambda p: p.requires_grad, self.parameters())
+        params = sum([np.prod(p.size()) for p in model_parameters])
+        return super().__str__() + "\nTrainable parameters: {}".format(params)

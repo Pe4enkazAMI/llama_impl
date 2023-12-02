@@ -26,7 +26,6 @@ class MultiHeadAttention(nn.Module):
 
     def make_attn_mask(self, x, device):
         mask = (torch.triu(torch.ones((x.shape[1], x.shape[1]), device=device)) == 1).transpose(0, 1)
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
 
     def forward(self, x, mask=None, return_attention=False):
