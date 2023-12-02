@@ -55,7 +55,7 @@ class Decoder(nn.Module):
         self.linear = nn.Linear(self.emb_dim, 5001)
 
     def forward(self, sentence):
-        padding_mask = (sentence == 0)
+        padding_mask = (sentence == 0).to(sentence.device)
         sentence = self.embedding(sentence)
         for layer in self.decoder:
             sentence = layer(sentence, padding_mask)
