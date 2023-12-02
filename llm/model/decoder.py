@@ -60,7 +60,7 @@ class Decoder(nn.Module):
         sentence = self.embedding(sentence)
         for layer in self.decoder:
             sentence = layer(sentence, padding_mask)
-        return {"logits": self.linear(self.decoder(sentence))}
+        return {"logits": self.linear(sentence)}
     
     def __str__(self):
         """
