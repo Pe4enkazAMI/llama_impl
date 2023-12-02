@@ -26,14 +26,7 @@ class Tokenizer:
             self.processor = spm.SentencePieceProcessor(model_file=self.model_path)
 
     def encode(self, text):
-        if self.processor is None:
-            self._throw_untrained_tokenizer()
         return self.processor.encode(text)
     
     def decode(self, ids):
-        if self.processor is None:
-            self._throw_untrained_tokenizer()
         return self.processor.decode(ids)
-
-    def _throw_untrained_tokenizer(self):
-        raise RuntimeError("Tokenizer is not trained yet")
