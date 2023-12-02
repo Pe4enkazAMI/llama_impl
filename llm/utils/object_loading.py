@@ -8,7 +8,8 @@ import torch
 def collate_fn(dataset_items):
     inp = [items["sentence"] for items in dataset_items]
     items = torch.stack(inp, dim=0)
-    return {"sentence" : items}
+    print(items.shape)
+    return {"sentence" : items.int()}
 
 
 def get_dataloaders(configs: ConfigParser):
