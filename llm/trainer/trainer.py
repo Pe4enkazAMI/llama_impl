@@ -201,8 +201,6 @@ class Trainer(BaseTrainer):
                 self.optimizer.zero_grad()
 
         metrics.update("loss", batch["loss"].item())
-        for met in ["grad_norm"]:
-            metrics.update(met.name, met(**batch), n=batch["sentence"].shape[0])
         return batch
 
     def _evaluation_epoch(self, epoch, part, dataloader):
