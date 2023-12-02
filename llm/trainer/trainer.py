@@ -44,6 +44,7 @@ class Trainer(BaseTrainer):
         self.evaluation_dataloaders = {k: v for k, v in dataloaders.items() if k != "train"}
         self.lr_scheduler = lr_scheduler
         self.log_step = 50
+        self.scaler = torch.cuda.amp.GradScaler()
 
         self.train_metrics = MetricTracker(
             "loss", "grad norm", writer=self.writer
@@ -179,17 +180,20 @@ class Trainer(BaseTrainer):
 
     def process_batch(self, batch, batch_idx, is_train: bool, metrics: MetricTracker):
         batch = self.move_batch_to_device(batch, self.device)
-        outputs = self.model(**batch)
-        batch.update(outputs)
-        batch["loss"] = self.criterion(**batch) / self.grad_accum_iters
+        with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+            outputs = self.model(**batch)
+            batch.update(outputs)
+            batch["loss"] = self.criterion(**batch) / self.grad_accum_iters
         if is_train:
-            batch["loss"].backward()
+            self.scaler.scale(batch["loss"]).backward()
             if (batch_idx + 1) % self.grad_accum_iters == 0 or (batch_idx + 1) == self.len_epoch:
                 self._clip_grad_norm()
-                self.optimizer.step()
+                self.scaler.step(self.optimizer)
                 if self.lr_scheduler is not None:
                     self.lr_scheduler.step()
                 self.train_metrics.update("grad norm", self.get_grad_norm())
+                
+                self.scaler.update()
                 self.optimizer.zero_grad()
 
         metrics.update("loss", batch["loss"].item())
