@@ -21,7 +21,6 @@ class Trainer(BaseTrainer):
             self,
             model,
             criterion,
-            metrics,
             optimizer,
             config,
             device,
@@ -30,7 +29,7 @@ class Trainer(BaseTrainer):
             len_epoch=None,
             skip_oom=True
     ):
-        super().__init__(model, criterion, metrics, optimizer, config, device)
+        super().__init__(model, criterion, optimizer, config, device)
         self.skip_oom = skip_oom
         self.config = config
         self.train_dataloader = dataloaders["train"]
