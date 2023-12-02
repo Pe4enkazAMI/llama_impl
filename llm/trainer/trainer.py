@@ -143,6 +143,7 @@ class Trainer(BaseTrainer):
                         if p.grad is not None:
                             del p.grad  # free some memory
                     torch.cuda.empty_cache()
+                    raise e
                     continue
                 else:
                     raise e
@@ -200,8 +201,8 @@ class Trainer(BaseTrainer):
                 self.optimizer.zero_grad()
 
         metrics.update("loss", batch["loss"].item())
-        for met in self.metrics:
-            metrics.update(met.name, met(**batch), n=batch["mix"].shape[0])
+        for met in ["grad_norm"]:
+            metrics.update(met.name, met(**batch), n=batch["sentence"].shape[0])
         return batch
 
     def _evaluation_epoch(self, epoch, part, dataloader):
