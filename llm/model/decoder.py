@@ -19,15 +19,15 @@ class DecoderBlock(nn.Module):
         super().__init__()
         
         self.block = nn.ModuleList([
-            nn.LayerNorm(emb_dim),
+            RMSNorm(emb_dim),
             MultiHeadAttention(emb_dim, emb_dim, num_heads, dropout=dropout),
             FeedForwardLayer(emb_dim, exp_factor)
         ])
     def forward(self, x, padding_mask):
         for i, layer in enumerate(self.block):
-            out = x.clone()
             if i == 0:
                 x = layer(x)
+                out = x.clone()
             if i == 1:
                 x = layer(x, padding_mask) + out
             else:

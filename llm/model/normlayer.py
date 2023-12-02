@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch
 
 class RMSNorm(nn.Module):
-    def __init__(self, emb_dim, p=-1, eps=1e-8, bias=False) -> None:
+    def __init__(self, emb_dim, p=-1, eps=1e-8, bias=True) -> None:
         super().__init__()
         self.eps = eps
         self.p = p
