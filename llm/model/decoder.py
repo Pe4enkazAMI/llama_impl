@@ -25,7 +25,7 @@ class DecoderBlock(nn.Module):
         ])
     def forward(self, x, padding_mask):
         for i, layer in enumerate(self.block):
-            out = x.copy()
+            out = x.clone()
             if i == 0:
                 x = layer(x)
             if i == 1:
