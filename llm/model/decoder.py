@@ -61,7 +61,7 @@ class Decoder(nn.Module):
     def forward(self, sentence):
         input = sentence[:, :-1].to(sentence.device)
         padding_mask = (input == 0).to(sentence.device)
-        sentence = self.embedding(sentence)
+        input = self.embedding(input)
         for layer in self.decoder:
             input = layer(input, padding_mask)
         return {"logits": self.linear(input)}
