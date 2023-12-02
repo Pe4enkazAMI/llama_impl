@@ -53,7 +53,7 @@ class Decoder(nn.Module):
         ]
         self.decoder = nn.Sequential(*zalupa_slonika)
 
-        self.linear = nn.Linear(self.emb_dim, 5000)
+        self.linear = nn.Linear(self.emb_dim, 5001)
 
     def forward(self, sentence):
         sentence = self.embedding(sentence)
