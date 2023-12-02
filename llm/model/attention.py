@@ -15,16 +15,19 @@ class MultiHeadAttention(nn.Module):
 
         self.qkv = nn.Linear(self.input_dim, 3*self.emb_dim)
         self.out = nn.Linear(self.emb_dim, self.emb_dim)
-        self._reset_parameters()
         self.dropout = nn.Dropout(p=dropout)
-    
+
+
+        self._reset_parameters()
+
+
     def _reset_parameters(self):
         nn.init.xavier_uniform_(self.qkv.weight)
         self.qkv.bias.data.fill_(0)
         nn.init.xavier_uniform_(self.out.weight)
         self.out.bias.data.fill_(0)
 
-    @torch.no_grad()
+
     def make_attn_mask(self, x, device):
         return nn.Transformer.generate_square_subsequent_mask(x.shape[1], device=device)
 
@@ -36,20 +39,17 @@ class MultiHeadAttention(nn.Module):
         qkv = qkv.permute(0, 2, 1, 3)
         q, k, v = torch.chunk(qkv, chunks=3, dim=-1)
 
-        if use_flash:
-            with torch.backends.cuda.enable_flash_sdp():
-                value = F.scaled_dot_product_attention(q, k, v, attn_mask=mask, is_causal=True)
-            value = value.permute(0, 2, 1, 3)
-            value = value.reshape(bs, seq_len, self.emb_dim)
-        else:
-            score = q @ k.transpose(-1, -2)
-            score = score / (q.shape[-1]**(0.5))
-            if mask is not None:
-                padding_mask = padding_mask.float().masked_fill(padding_mask == 1, float('-inf')).masked_fill(padding_mask == 0, float(0.0))
-                score = score + mask.unsqueeze(0).unsqueeze(0) + padding_mask.unsqueeze(1).unsqueeze(-1)
-            score = F.softmax(score, dim=-1)
-            value = score @ v
 
+        score = q @ k.transpose(-1, -2)
+        score = score / (q.shape[-1]**(0.5))
+
+        if mask is not None:
+            padding_mask = padding_mask.float().masked_fill(padding_mask == 1, -9e-13).masked_fill(padding_mask == 0, 0.0)
+            score = score + mask.unsqueeze(0).unsqueeze(0) + padding_mask.unsqueeze(1).unsqueeze(-1)
+        
+        score = F.softmax(score, dim=-1)
+
+        value = score @ v
         value = value.permute(0, 2, 1, 3)
         value = value.reshape(bs, seq_len, self.emb_dim)
 
