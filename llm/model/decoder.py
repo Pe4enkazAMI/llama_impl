@@ -29,6 +29,7 @@ class DecoderBlock(nn.Module):
                 x = layer(x, padding_mask)
             else:
                 x = layer(x)
+        return x
     
 
 
