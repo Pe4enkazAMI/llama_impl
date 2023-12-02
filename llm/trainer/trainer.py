@@ -30,6 +30,7 @@ class Trainer(BaseTrainer):
             skip_oom=True
     ):
         super().__init__(model, criterion, optimizer, config, device)
+
         self.skip_oom = skip_oom
         self.config = config
         self.train_dataloader = dataloaders["train"]
@@ -45,12 +46,12 @@ class Trainer(BaseTrainer):
         self.log_step = 50
 
         self.train_metrics = MetricTracker(
-            "loss", "grad norm", *[m.name for m in self.metrics], writer=self.writer
+            "loss", "grad norm", writer=self.writer
         )
         self.evaluation_metrics = MetricTracker(
-            "loss", *[m.name for m in self.metrics], writer=self.writer
+            "loss", writer=self.writer
         )
-        self.fine_tune = config["trainer"].get("fine_tune", False)
+        self.fine_tune = config["trainer"].get("finetune", False)
         self.grad_accum_iters = config["trainer"].get("grad_accum_iters", 1)
         self.eval_start_iter = config["trainer"].get("eval_start_iter", 0)
         self.scheduler_config = config["trainer"].get("scheduler", None)
@@ -224,9 +225,6 @@ class Trainer(BaseTrainer):
             self._log_scalars(self.evaluation_metrics)
             self._log_predictions(**batch, is_train=False)
 
-        # add histogram of model parameters to the tensorboard
-        #for name, p in self.model.named_parameters():
-            #self.writer.add_histogram(name, p, bins="auto")
         return self.evaluation_metrics.result()
 
     def _progress(self, batch_idx):
