@@ -14,8 +14,7 @@ class DecoderBlock(nn.Module):
                  emb_dim,
                  num_heads, 
                  exp_factor,
-                 dropout,
-                 padding_mask) -> None:
+                 dropout) -> None:
         
         super().__init__()
         
