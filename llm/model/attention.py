@@ -28,7 +28,7 @@ class MultiHeadAttention(nn.Module):
         mask = (torch.triu(torch.ones((x.shape[1], x.shape[1]), device=device)) == 1).transpose(0, 1)
         return mask
 
-    def forward(self, x, mask=None, return_attention=False):
+    def forward(self, x, mask=None, return_attention=False, use_flash=False):
         bs, seq_len, _  = x.shape
         mask = self.make_attn_mask(x, x.device)
         qkv = self.qkv(x)
@@ -36,18 +36,22 @@ class MultiHeadAttention(nn.Module):
         qkv = qkv.permute(0, 2, 1, 3)
         q, k, v = torch.chunk(qkv, chunks=3, dim=-1)
 
-        score = q @ k.transpose(-1, -2)
-        score = score / (q.shape[-1]**(0.5))
-        if mask is not None:
-            score = score.masked_fill(mask, -9e-13)
-        score = F.softmax(score, dim=-1)
-        value = score @ v
+        if use_flash:
+            with torch.backends.cuda.enable_flash_sdp():
+                value = F.scaled_dot_product_attention(q, k, v, attn_mask=mask, is_causal=True)
+            value = value.permute(0, 2, 1, 3)
+            value = value.reshape(bs, seq_len, self.emb_dim)
+        else:
+            score = q @ k.transpose(-1, -2)
+            score = score / (q.shape[-1]**(0.5))
+            if mask is not None:
+                score = score.masked_fill(mask, -9e-13)
+            score = F.softmax(score, dim=-1)
+            value = score @ v
+            
         value = value.permute(0, 2, 1, 3)
         value = value.reshape(bs, seq_len, self.emb_dim)
 
-        out = self.dropout(self.out(value))
-        if return_attention:
-            return out, score
-        else:
-            return out
+        out = self.dropout(self.out(value)) + x
+        return out
 
