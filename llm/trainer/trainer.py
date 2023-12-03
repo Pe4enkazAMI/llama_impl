@@ -305,5 +305,5 @@ class Trainer(BaseTrainer):
             output_logits = torch.nn.functional.softmax(self.model.get_next_token(prefix, tgt_mask, tgt_padding_mask), dim=-1)
             
             prefix = torch.cat((prefix, torch.multinomial(output_logits, 1)), dim=-1)
-        prefix = self.tokenizer.decode(prefix)
+        prefix = self.tokenizer.decode(prefix.tolist())
         return prefix
