@@ -179,7 +179,7 @@ class Trainer(BaseTrainer):
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
-        texts = self.generate(256, 0)
+        texts = self.generate(3, 0, "Once upon a time ")
              
         for t_num, text in enumerate(texts):
             self.writer.add_text(f"step_{(epoch - 1)}_text_{t_num}", text)
@@ -296,6 +296,10 @@ class Trainer(BaseTrainer):
         self.model.eval()
         if prefix is None:
             prefix = torch.full((batch_size, 1), fill_value=1).to(next(self.model.parameters()).device)
+        else:
+            prefix = self.tokenizer.encode(prefix)
+            prefix = torch.tensor(prefix)
+            prefix = torch.tile(prefix, dims=(batch_size, 1)).to(next(self.model.parameters()).device)
         
         count = max_len - prefix.shape[-1]
         for i in range(count):
