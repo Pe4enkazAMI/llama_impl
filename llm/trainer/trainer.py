@@ -190,8 +190,8 @@ class Trainer(BaseTrainer):
         tgt_mask, tgt_padding_mask = create_mask(batch["input_ids"][:, :-1], 0, batch["input_ids"].device)
 
         batch["input_ids"] = batch["input_ids"][:, :-1]
-        batch["tgt_mask"] = tgt_mask
-        batch["tgt_padding_mask"] = tgt_padding_mask
+        batch["attention_mask"] = tgt_mask
+        batch["padding_mask"] = tgt_padding_mask
         with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
             outputs = self.model(**batch)
             batch.update(outputs)
