@@ -84,7 +84,7 @@ class LLAMA(nn.Module):
         return super().__str__() + "\nTrainable parameters: {}".format(params)
     
     def forward(self, input_ids: Tensor, attention_mask: Tensor, padding_mask: Tensor):
-        x = self.embedding(input_ids[:, :-1])
+        x = self.embedding(input_ids)
         x = self.positional_encoding(x)
         x = self.transformer(x, attention_mask, padding_mask)
         return {"logits": self.classification(x)}

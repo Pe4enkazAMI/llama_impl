@@ -187,14 +187,14 @@ class Trainer(BaseTrainer):
 
     def process_batch(self, batch, batch_idx, is_train: bool, metrics: MetricTracker):
         batch = self.move_batch_to_device(batch, self.device)
-        tgt_mask, tgt_padding_mask = create_mask(batch["input_ids"][:, :-1], 0, batch["input_ids"].device)
+        tgt_input = batch["input_ids"][:, :-1]
 
-        batch["attention_mask"] = tgt_mask
-        batch["padding_mask"] = tgt_padding_mask
+        tgt_mask, tgt_padding_mask = create_mask(tgt_input, 0, batch["input_ids"].device)
         with torch.autocast(device_type="cuda", dtype=torch.float16):
-            outputs = self.model(**batch)
+            outputs = self.model(tgt_input, tgt_mask, tgt_padding_mask)
             batch.update(outputs)
-            batch["loss"] = self.criterion(**batch) / self.grad_accum_iters
+            tgt_out = batch["input_ids"][:, 1:]
+            batch["loss"] = self.criterion(batch["logits"], tgt_out) / self.grad_accum_iters
         if is_train:
             self.scaler.scale(batch["loss"]).backward()
             if (batch_idx + 1) % self.grad_accum_iters == 0 or (batch_idx + 1) == self.len_epoch:
