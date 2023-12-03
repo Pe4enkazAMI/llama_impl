@@ -192,7 +192,7 @@ class Trainer(BaseTrainer):
         batch["input_ids"] = batch["input_ids"][:, :-1]
         batch["attention_mask"] = tgt_mask
         batch["padding_mask"] = tgt_padding_mask
-        with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+        with torch.autocast(device_type="cuda", dtype=torch.float16):
             outputs = self.model(**batch)
             batch.update(outputs)
             batch["loss"] = self.criterion(**batch) / self.grad_accum_iters
