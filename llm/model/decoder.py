@@ -1,75 +1,94 @@
+import torch
 from torch import Tensor
 import torch.nn as nn
-import torch
-import torch.nn.functional as F
-from .resconnection import ResidualConnection
-from .normlayer import RMSNorm
-from .posencoding import PositionalEncoding, RoPE
-from .attention import MultiHeadAttention
-from .feedforward import FeedForwardLayer
-import numpy as np
+import copy
 
-class DecoderBlock(nn.Module):
-    def __init__(self,
-                 emb_dim,
-                 num_heads, 
-                 exp_factor,
-                 dropout) -> None:
-        
-        super().__init__()
-        
-        self.block = nn.ModuleList([
-            RMSNorm(emb_dim),
-            MultiHeadAttention(emb_dim, emb_dim, num_heads, dropout=dropout),
-            FeedForwardLayer(emb_dim, exp_factor)
-        ])
-    def forward(self, x, padding_mask):
-        for i, layer in enumerate(self.block):
-            if i == 0:
-                x = layer(x)
-                out = x.clone()
-            if i == 1:
-                x = layer(x, padding_mask) + out
-            else:
-                x = layer(x) + x
-        return x
-    
+nn.TransformerDecoderLayer
+nn.TransformerDecoder
 
+class DecoderLayer(nn.Module):
+    def __init__(self, embed_dim, num_heads, ff_dim, dropout, batch_first=True, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.attention = nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout, batch_first=batch_first)
+        self.attn_dropout = nn.Dropout(dropout)
+
+        self.feed_forward = nn.Sequential(
+            nn.Linear(embed_dim, ff_dim),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(ff_dim, embed_dim),
+            nn.Dropout(dropout)
+        )
+        self.norm1 = nn.LayerNorm(embed_dim)
+        self.norm2 = nn.LayerNorm(embed_dim)
+
+    def forward(self, x, attention_mask, padding_mask):
+        x_ = self.norm1(x)
+        x_, _ = self.attention(x, x, x, attn_mask=attention_mask, key_padding_mask=padding_mask)
+        x_ = x + x_
+        x_ = self.norm2(x_)
+        x_ = x_ + self.feed_forward(x_)
+        return x_
 
 class Decoder(nn.Module):
-    def __init__(self, emb_dim, num_head, exp_factor, num_layers, dropout, *args, **kwargs):
-        super().__init__()
-        self.emb_dim = emb_dim
-        self.num_head = num_head
-        self.exp_factor = exp_factor,
-        self.embedding = nn.Embedding(5001, self.emb_dim)
-
-        self.num_layers = num_layers
-        if kwargs["use_rope"]:
-            self.rotary_base = kwargs["rotary_base"]
-            self.pe = RoPE(emb_dim, self.rotary_base)
-        else:
-            self.pe = PositionalEncoding(emb_dim)
-
-        zalupa_slonika = [
-            DecoderBlock(emb_dim, num_head, exp_factor, dropout=dropout) for _ in range(num_layers)
-        ]
-        self.decoder = nn.ModuleList(zalupa_slonika)
-
-        self.linear = nn.Linear(self.emb_dim, 5001)
-
-    def forward(self, sentence):
-        input = sentence[:, :-1].to(sentence.device)
-        padding_mask = (input == 0).to(sentence.device)
-        input = self.embedding(input)
+    def __init__(self, decoder_layer, num_layers, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.decoder = nn.ModuleList([copy.deepcopy(decoder_layer) for i in range(num_layers)])
+    
+    def forward(self, x, attention_mask, padding_mask):
         for layer in self.decoder:
-            input = layer(input, padding_mask)
-        return {"logits": self.linear(input)}
+            x = layer(x, attention_mask, padding_mask)
+        return x
+
+class PositionalEncoding(nn.Module):
+    def __init__(self, embed_dim, dropout: float = 0.1, max_len: int = 5000):
+        """
+        Inputs
+            embed_dim - Hidden dimensionality of the input.
+            max_len - Maximum length of a sequence to expect.
+        """
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.dropout = nn.Dropout(dropout)
+
+        pe = torch.zeros(max_len, self.embed_dim)
+        pos = torch.arange(max_len).reshape(-1, 1)
+        denom = torch.pow(10000, (torch.arange(self.embed_dim) - (torch.arange(self.embed_dim) % 2)) / embed_dim)
+        pe = pos / denom
+        pe[:, 0::2] = torch.sin(pe[:, 0::2])
+        pe[:, 1::2] = torch.cos(pe[:, 1::2])
+        pe = pe.unsqueeze(0)
+        self.register_buffer('pe', pe, persistent=False)
+
+    def forward(self, x):
+        x = x + self.pe[:, :x.shape[-2], :]
+        return self.dropout(x)
+
+class LLAMA(nn.Module):
+    def __init__(self, num_layers, embed_dim, num_heads, vocab_size=5001, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.positional_encoding = PositionalEncoding(embed_dim=embed_dim, dropout=0.1)
+        self.embedding = nn.Embedding(vocab_size, embed_dim)
+        self.transformer = Decoder(
+            DecoderLayer(embed_dim, num_heads, 4 * embed_dim, 0.1, batch_first=True),
+            num_layers=num_layers
+        )
+        self.classification = nn.Linear(embed_dim, 5001)
     
     def __str__(self):
         """
         Model prints with number of trainable parameters
         """
         model_parameters = filter(lambda p: p.requires_grad, self.parameters())
-        params = sum([np.prod(p.size()) for p in model_parameters])
+        params = sum([torch.prod(torch.tensor(p.shape)) for p in model_parameters])
         return super().__str__() + "\nTrainable parameters: {}".format(params)
+    
+    def forward(self, input_ids: Tensor, attention_mask: Tensor, padding_mask: Tensor):
+        x = self.embedding(input_ids)
+        x = self.positional_encoding(x)
+        x = self.transformer(x, attention_mask, padding_mask)
+        return self.classification(x)
+    
+    def get_next_token(self, prefix: Tensor, attention_mask: Tensor, padding_mask: Tensor):
+        """ :returns: probabilities of next token """
+        return self.forward(prefix, attention_mask, padding_mask)[:, -1, :]

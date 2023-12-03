@@ -4,12 +4,9 @@
     "arch": {
       "type": "Decoder",
       "args": {
-        "emb_dim": 512,
-        "num_head": 8,
-        "num_layers": 8,
-        "dropout": 0.1,
-        "exp_factor": 4,
-        "use_rope": false
+        "embed_dim": 512,
+        "num_heads": 8,
+        "num_layers": 8
       }
     },
     "data": {
@@ -43,7 +40,8 @@
     "optimizer": {
       "type": "AdamW",
       "args": {
-        "lr": 1e-3
+        "lr": 1e-3,
+        "weight_decay": 1e-5
       }
     },
     "lr_scheduler": {
@@ -73,9 +71,9 @@
       "early_stop": 100,
       "visualize": "wandb",
       "wandb_project": "lm_project",
-      "wandb_run_name": "LLaMa_First_Run",
+      "wandb_run_name": "LLaMa_GO",
       "len_epoch": 1000,
       "grad_norm_clip": 100,
-      "grad_accum_iters": 4
+      "grad_accum_iters": 2
     }
   }
