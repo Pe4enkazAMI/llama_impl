@@ -105,7 +105,7 @@ class Trainer(BaseTrainer):
         """
         Move all necessary tensors to the GPU
         """
-        for tensor_for_gpu in ["sentence"]:
+        for tensor_for_gpu in ["input_ids"]:
             batch[tensor_for_gpu] = batch[tensor_for_gpu].to(device)
         return batch
 
@@ -188,7 +188,7 @@ class Trainer(BaseTrainer):
     def process_batch(self, batch, batch_idx, is_train: bool, metrics: MetricTracker):
         batch = self.move_batch_to_device(batch, self.device)
         tgt_mask, tgt_padding_mask = create_mask(batch["input_ids"][:, :-1], 0, batch["input_ids"].device)
-        
+
         batch["input_ids"] = batch["input_ids"][:, :-1]
         batch["tgt_mask"] = tgt_mask
         batch["tgt_padding_mask"] = tgt_padding_mask
