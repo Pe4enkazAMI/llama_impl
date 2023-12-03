@@ -1,8 +1,8 @@
-from .decoder import Decoder
+from .decoder import LLAMA
 from .decoder import generate_square_mask, create_mask
 
 __all__ = [
-    "Decoder",
+    "LLAMA",
     "generate_square_mask",
     "create_mask"
 ]
