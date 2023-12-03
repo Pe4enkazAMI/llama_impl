@@ -10,6 +10,8 @@ from tqdm import tqdm
 
 from llm.base import BaseTrainer
 from llm.utils import inf_loop, MetricTracker
+from llm.model import create_mask, generate_square_mask
+from tokenizer import Tokenizer
 
 
 class Trainer(BaseTrainer):
@@ -55,6 +57,7 @@ class Trainer(BaseTrainer):
         self.fine_tune = config["trainer"].get("finetune", False)
         self.grad_accum_iters = config["trainer"].get("grad_accum_iters", 1)
         self.eval_start_iter = config["trainer"].get("eval_start_iter", 0)
+        self.tokenizer = Tokenizer("/home/jupyter/work/resources/for_dl/llama_impl/llm/tiny_stories_5k.model")
 
         if config.resume is not None:
             self._resume_checkpoint(config.resume)
@@ -176,6 +179,10 @@ class Trainer(BaseTrainer):
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
+        texts = self.generate(256, 0)
+             
+        for t_num, text in enumerate(texts):
+            self.writer.add_text(f"step_{(epoch - 1)}_text_{t_num}", text)
         return log
 
     def process_batch(self, batch, batch_idx, is_train: bool, metrics: MetricTracker):
@@ -265,3 +272,34 @@ class Trainer(BaseTrainer):
             return
         for metric_name in metric_tracker.keys():
             self.writer.add_scalar(f"{metric_name}", metric_tracker.avg(metric_name))
+
+    @torch.no_grad()
+    def generate(self, batch_size: int, pad_idx, prefix =None, max_len=384):
+        """
+        Samples output sequence from probability distribution obtained by model.
+        if Tensor of prefix is None then full it with [BOS] token
+
+        :params
+            model: predict next token for the whole batch of sequences
+            tokenizer: tokenizer for the model and [BOS] token
+            batch_size: number of sequence
+            prefix: Tensor of tokens with shape: [batch_size, seq_len]
+            max_len: max length of predicted sequence
+
+        :return
+            the Tensor of tokens of shape: [batch_size, max_len + 1]
+        """
+        self.model.eval()
+        if prefix is None:
+            prefix = torch.full((batch_size, 1), fill_value=self.tokenizer.bos_id()).to(next(self.model.parameters()).device)
+        
+        count = max_len - prefix.shape[-1]
+        for i in range(count):
+            prefix = prefix.clone().detach()
+            tgt_mask, tgt_padding_mask = create_mask(prefix, pad_idx, device='cuda')
+
+            output_logits = torch.nn.functional.softmax(self.model.get_next_token(prefix, tgt_mask, tgt_padding_mask), dim=-1)
+            
+            prefix = torch.cat((prefix, torch.multinomial(output_logits, 1)), dim=-1)
+        prefix = self.tokenizer.decode(prefix)
+        return prefix
