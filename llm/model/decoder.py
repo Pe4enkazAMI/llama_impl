@@ -73,7 +73,7 @@ class LLAMA(nn.Module):
             DecoderLayer(embed_dim, num_heads, 4 * embed_dim, 0.1, batch_first=True),
             num_layers=num_layers
         )
-        self.classification = nn.Linear(embed_dim, 5001)
+        self.classification = nn.Linear(embed_dim, vocab_size)
     
     def __str__(self):
         """
