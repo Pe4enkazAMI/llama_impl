@@ -295,7 +295,7 @@ class Trainer(BaseTrainer):
         """
         self.model.eval()
         if prefix is None:
-            prefix = torch.full((batch_size, 1), fill_value=self.tokenizer.bos_id()).to(next(self.model.parameters()).device)
+            prefix = torch.full((batch_size, 1), fill_value=1).to(next(self.model.parameters()).device)
         
         count = max_len - prefix.shape[-1]
         for i in range(count):
