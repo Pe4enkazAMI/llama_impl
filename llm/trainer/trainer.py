@@ -299,7 +299,7 @@ class Trainer(BaseTrainer):
         else:
             prefix = self.tokenizer.encode(prefix)
             prefix = torch.tensor(prefix)
-            prefix = torch.tile(prefix, dims=(batch_size, 1)).to(next(self.model.parameters()).device)
+            prefix = torch.tile(prefix, dims=(1, 1)).to(next(self.model.parameters()).device)
         
         count = max_len - prefix.shape[-1]
         for i in range(count):
@@ -309,5 +309,5 @@ class Trainer(BaseTrainer):
             output_logits = torch.nn.functional.softmax(self.model.get_next_token(prefix, tgt_mask, tgt_padding_mask), dim=-1)
             
             prefix = torch.cat((prefix, torch.multinomial(output_logits, 1)), dim=-1)
-        prefix = self.tokenizer.decode(prefix.cpu().tolist())
+        prefix = self.tokenizer.decode(prefix[0, ...].cpu().tolist())
         return prefix
