@@ -14,6 +14,6 @@ class LLaMaDataset:
         self.round_tensor = torch.load(self.path)
 
     def __getitem__(self, index):
-        return {"sentence": self.round_tensor[index, ...]}
+        return {"input_ids": self.round_tensor[index, ...]}
     def __len__(self):
         return self.round_tensor.shape[0]

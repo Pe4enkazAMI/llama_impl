@@ -6,9 +6,9 @@ import llm.datasets_
 from llm.utils.parse_config import ConfigParser
 import torch
 def collate_fn(dataset_items):
-    inp = [items["sentence"] for items in dataset_items]
+    inp = [items["input_ids"] for items in dataset_items]
     items = torch.stack(inp, dim=0)
-    return {"sentence" : items.int()}
+    return {"input_ids" : items.int()}
 
 
 def get_dataloaders(configs: ConfigParser):

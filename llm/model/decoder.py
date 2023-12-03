@@ -87,11 +87,11 @@ class LLAMA(nn.Module):
         x = self.embedding(input_ids)
         x = self.positional_encoding(x)
         x = self.transformer(x, attention_mask, padding_mask)
-        return self.classification(x)
+        return {"logits": self.classification(x)}
     
     def get_next_token(self, prefix: Tensor, attention_mask: Tensor, padding_mask: Tensor):
         """ :returns: probabilities of next token """
-        return self.forward(prefix, attention_mask, padding_mask)[:, -1, :]
+        return self.forward(prefix, attention_mask, padding_mask)["logits"][:, -1, :]
 
 
 def generate_square_mask(sz, device):
