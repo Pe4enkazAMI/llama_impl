@@ -179,7 +179,7 @@ class Trainer(BaseTrainer):
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
-        texts = self.generate(3, 0)
+        texts = self.generate(1, 0)
              
         for t_num, text in enumerate(texts):
             self.writer.add_text(f"step_{(epoch - 1)}_text_{t_num}", text)
