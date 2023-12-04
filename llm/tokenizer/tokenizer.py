@@ -22,8 +22,7 @@ class Tokenizer:
         )
 
     def load_processor(self):
-        if os.path.exists(self.model_path):
-            self.processor = spm.SentencePieceProcessor(model_file=self.model_path)
+        self.processor = spm.SentencePieceProcessor(model_file=self.model_path)
 
     def encode(self, text):
         return self.processor.encode(text)
