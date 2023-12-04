@@ -2,11 +2,12 @@
     "name": "default_config",
     "n_gpu": 1,
     "arch": {
-      "type": "LLAMA",
+      "type": "LLaMa",
       "args": {
         "embed_dim": 512,
         "num_heads": 8,
-        "num_layers": 8
+        "num_layers": 8,
+        "vocab_size": 5001
       }
     },
     "data": {
